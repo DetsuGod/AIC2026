@@ -1,0 +1,969 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>AIC 2026 - Multimodal Pro Search & TRAKE Matrix</title>
+    <link rel="icon" href="data:,">
+    <link rel="stylesheet" href="style.css?v=20260926_rrf_transparency_v4">
+    <!-- Google Fonts for precision typography -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap"
+        rel="stylesheet">
+</head>
+
+<body>
+    <div class="layout-container">
+        <!-- Sidebar: Unified Control Center / Dashboard (380px) -->
+        <aside class="sidebar">
+            <div class="logo-pro-bar">
+                <div class="logo-title">
+                    <span>AIC.2026</span>
+                    <span class="logo-badge">PRO</span>
+                </div>
+                <div class="logo-status-tag readiness-warming" id="system-readiness"
+                    title="Backend đang khởi tạo các thành phần truy vấn">
+                    <span class="logo-status-dot" id="system-readiness-dot"></span>
+                    <span id="system-readiness-text">WARMING UP 0%</span>
+                </div>
+            </div>
+
+            <!-- SEARCH MODE: độc lập với ba chế độ nộp DRES -->
+            <div id="mode-switcher" class="mode-switcher-bar" aria-label="Chế độ tìm kiếm">
+                <button id="mode-kis-btn" class="mode-btn active" title="Chỉ đổi thuật toán tìm kiếm; không đổi thể thức nộp DRES">🔍 SEARCH KIS</button>
+                <button id="mode-trake-btn" class="mode-btn mode-trake" title="Tìm chuỗi tuần tự TARS DP; vẫn có thể nộp KIS hoặc QA">⏱️ SEARCH TRAKE</button>
+            </div>
+
+            <div class="sidebar-scrollable" id="sidebar-scrollable">
+                <!-- COMPACT FUSION STRATEGY STRIP -->
+                <div class="rrf-compact-strip" id="strip-fusion">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <label class="switch-small" title="Bật/Tắt RRF Rank-based Fusion">
+                            <input type="checkbox" id="use-rrf-check" checked>
+                            <span class="slider round"></span>
+                        </label>
+                        <label for="use-rrf-check" class="rrf-strip-label">⚡ RRF (Thứ Hạng)</label>
+                    </div>
+                    <div class="rrf-k-group" id="rrf-k-group" style="display: flex; align-items: center; gap: 5px;">
+                        <label for="rrf-k-input"
+                            style="font-size: 0.76rem; font-weight: 600; margin: 0; color: #a5b4fc;">k =</label>
+                        <input type="number" id="rrf-k-input" min="1" max="500" value="60" class="num-box rrf-k-num"
+                            title="Hằng số k làm mượt RRF (mặc định 60)">
+                    </div>
+                </div>
+
+                <!-- RRF SIGNAL SELECTOR STRIP -->
+                <div class="rrf-signals-strip" id="rrf-signals-strip" style="display: flex; align-items: center; justify-content: space-between; gap: 4px; padding: 6px 10px; background: rgba(15, 23, 42, 0.65); border: 1px solid rgba(71, 85, 105, 0.5); border-radius: 6px; margin-bottom: 10px;">
+                    <span style="font-size: 0.70rem; font-weight: 700; color: #94a3b8; letter-spacing: 0.5px;">RRF:</span>
+                    <label style="display: flex; align-items: center; gap: 4px; font-size: 0.72rem; cursor: pointer; color: #e2e8f0;" title="Bật/Tắt tín hiệu Keyframe Visual">
+                        <input type="checkbox" id="rrf-signal-visual" checked> <span>👁️ Visual</span>
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 4px; font-size: 0.72rem; cursor: pointer; color: #e2e8f0;" title="Bật/Tắt tín hiệu Whisper ASR">
+                        <input type="checkbox" id="rrf-signal-asr" checked> <span>🎙️ ASR</span>
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 4px; font-size: 0.72rem; cursor: pointer; color: #38bdf8; font-weight: 600;" title="Bật/Tắt tín hiệu Video Shot 2048D">
+                        <input type="checkbox" id="rrf-signal-shot" checked> <span>🎬 Shot</span>
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 4px; font-size: 0.72rem; cursor: pointer; color: #fbbf24;" title="Caption chỉ có ở một số shot batch 1; điểm fusion tự cân bằng theo coverage">
+                        <input type="checkbox" id="rrf-signal-caption"> <span>📝 Caption</span>
+                    </label>
+                </div>
+
+                <!-- MODULE 0: GEMINI AI PROMPT PARSER (MỞ SẴN) -->
+                <div class="feature-card card-gemini" id="card-gemini">
+                    <div class="card-header" data-target="body-gemini">
+                        <div class="header-left">
+                            <span class="card-icon">✨</span>
+                            <span class="card-title">GEMINI AI PARSER</span>
+                        </div>
+                        <span class="chevron-icon">▲</span>
+                    </div>
+                    <div class="card-body" id="body-gemini">
+                        <textarea id="raw-query-input" rows="3"
+                            placeholder="Dán nguyên văn đề bài AIC (KIS, QA, TRAKE) vào đây..."></textarea>
+                        <div class="ai-controls">
+                            <button id="ai-parse-btn" class="ai-btn">✨ PHÂN TÁCH ĐỀ BÀI</button>
+                        </div>
+
+                        <!-- MULTI-SCENE SWITCHER GỌN GÀNG TRONG MODULE 0 -->
+                        <div id="multi-scene-bar" class="multi-scene-container" style="display: none;">
+                            <div class="multi-scene-header">
+                                <span class="multi-scene-badge" id="multi-scene-badge-title">🎬 MULTI-SCENE</span>
+                                <span id="multi-scene-summary" class="multi-scene-desc">Phát hiện chuỗi phân cảnh</span>
+                                <button type="button" id="toggle-scene-editor-btn" style="display:none;"></button>
+                            </div>
+
+                            <!-- Segmented Tabs Switcher: [Tất cả], [Cảnh 1], [Cảnh 2] -->
+                            <div id="multi-scene-tabs" class="multi-scene-tabs">
+                                <!-- Dynamic tabs injected by JS -->
+                            </div>
+
+                            <!-- Hidden container for compatibility -->
+                            <div id="multi-scene-editor-cards" style="display: none;"></div>
+                        </div>
+
+                        <!-- QWEN RERANK GUIDANCE (DISCRIMINATING FEATURES & HINT) -->
+                        <div id="gemini-rerank-guidance" class="rerank-guidance-box" hidden style="display: none; margin-top: 10px; background: rgba(15, 23, 42, 0.7); border: 1px solid #475569; border-radius: 6px; overflow: hidden;">
+                            <div id="header-rerank-guidance" style="font-size: 0.72rem; font-weight: 700; color: #a5b4fc; padding: 6px 10px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; user-select: none; background: rgba(30, 41, 59, 0.6); border-bottom: 1px solid rgba(71, 85, 105, 0.4);">
+                                <div style="display: flex; align-items: center; gap: 6px;">
+                                    <span>🎯 ĐẶC TRƯNG PHÂN BIỆT (QWEN GUIDE)</span>
+                                    <span style="font-size: 0.65rem; color: var(--text-dim); font-weight: normal;">(Tùy chỉnh)</span>
+                                </div>
+                                <span id="chevron-rerank-guidance" class="chevron-icon" style="font-size: 0.65rem; color: var(--text-dim);">▲</span>
+                            </div>
+                            <div id="body-rerank-guidance" style="padding: 8px 10px;">
+                                <div id="discriminating-tags-container" class="discriminating-tags-list" style="display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 6px;">
+                                    <!-- Tags injected by JS -->
+                                </div>
+                                <div style="display: flex; gap: 4px; margin-bottom: 6px;">
+                                    <input type="text" id="add-disc-feature-input" placeholder="+ Thêm từ khóa (VD: măng tây, cột 4...)" style="flex: 1; font-size: 0.72rem; padding: 3px 6px;">
+                                    <button type="button" id="btn-add-disc-feature" class="btn-pill" style="font-size: 0.72rem; padding: 2px 8px;">+ Thêm</button>
+                                </div>
+                                <div style="font-size: 0.70rem; color: #94a3b8; margin-bottom: 2px;">💡 Gợi ý AI Rerank:</div>
+                                <textarea id="rerank-hint-input" rows="2" placeholder="Gợi ý trọng tâm cho mô hình AI..." style="width: 100%; font-size: 0.72rem; padding: 4px 6px;"></textarea>
+                            </div>
+                        </div>
+
+                        <details class="api-key-details">
+                            <summary>🔑 Gemini API Key (Đã cài sẵn)</summary>
+                            <input type="password" id="gemini-api-key"
+                                value=""
+                                placeholder="Để trống để dùng key trong .env..."
+                                style="width: 100%; font-size: 0.8rem; margin-top: 4px;">
+                        </details>
+                    </div>
+                </div>
+
+                <!-- MODULE 1: VISUAL SEMANTIC SEARCH -->
+                <div class="feature-card" id="card-visual">
+                    <div class="card-header" data-target="body-visual">
+                        <div class="header-left">
+                            <label class="switch-small" title="Bật/Tắt Visual Query">
+                                <input type="checkbox" id="enable-visual-check" checked>
+                                <span class="slider round"></span>
+                            </label>
+                            <span class="card-title">👁️ VISUAL QUERY</span>
+                        </div>
+                        <span class="chevron-icon">▲</span>
+                    </div>
+                    <div class="card-body" id="body-visual">
+                        <textarea id="search-input" rows="3"
+                            placeholder="Ví dụ: Trong phòng ba người ngồi chơi nhạc cụ kim loại..."></textarea>
+                        <div class="weight-row" id="row-weight-visual">
+                            <label for="weight-visual">Visual Weight: <span id="val-weight-visual">1.0</span></label>
+                            <input type="range" id="weight-visual" min="0" max="1" step="0.1" value="1.0">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- MODULE 1B: MULTI-VIEW IMAGE QUERY (QWEN3-VL 2048D / CTRL + V) -->
+                <div class="feature-card is-collapsed" id="card-image-query">
+                    <div class="card-header" data-target="body-image-query">
+                        <div class="header-left">
+                            <span class="card-icon">🖼️</span>
+                            <span class="card-title">MULTI-VIEW IMAGE QUERY (CTRL + V)</span>
+                            <span id="badge-image-count" class="badge-count" style="display: none; background: #6366f1; color: #fff; font-size: 0.70rem; padding: 2px 6px; border-radius: 10px; margin-left: 6px; font-weight: 700;">0 ảnh</span>
+                        </div>
+                        <span class="chevron-icon">▼</span>
+                    </div>
+                    <div class="card-body" id="body-image-query">
+                        <div id="image-dropzone" class="image-dropzone" style="border: 2px dashed #475569; border-radius: 8px; padding: 12px; text-align: center; background: rgba(15, 23, 42, 0.5); cursor: pointer; transition: all 0.2s ease;">
+                            <div id="image-dropzone-placeholder" style="color: #94a3b8; font-size: 0.78rem;">
+                                <div style="font-size: 1.5rem; margin-bottom: 4px;">📋</div>
+                                <div><strong>Ấn Ctrl + V</strong> (dán 1 hoặc nhiều góc ảnh của đối tượng)</div>
+                                <div style="font-size: 0.70rem; color: #64748b; margin-top: 4px;">hoặc kéo thả / click để chọn nhiều file ảnh</div>
+                            </div>
+                            <input type="file" id="image-file-input" accept="image/*" multiple style="display: none;">
+                            
+                            <div id="image-gallery-container" style="display: none; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 8px; margin-top: 8px;">
+                                <!-- Các thumbnail ảnh đa góc nhìn được render ở đây -->
+                            </div>
+                        </div>
+
+                        <div id="image-actions-bar" style="display: none; margin-top: 8px; display: flex; gap: 6px;">
+                            <button type="button" id="btn-add-more-image" class="ai-btn" style="flex: 1; background: rgba(99, 102, 241, 0.2); border: 1px solid #6366f1; color: #a5b4fc; font-size: 0.75rem; padding: 6px;">➕ Thêm góc ảnh</button>
+                            <button type="button" id="btn-clear-all-images" class="ai-btn" style="background: rgba(239, 68, 68, 0.2); border: 1px solid #ef4444; color: #fca5a5; font-size: 0.75rem; padding: 6px;">🗑️ Xóa tất cả</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- MODULE 2: ASR SPEECH CONTEXT -->
+                <div class="feature-card" id="card-asr">
+                    <div class="card-header" data-target="body-asr">
+                        <div class="header-left">
+                            <label class="switch-small" title="Bật/Tắt ASR">
+                                <input type="checkbox" id="enable-asr-check" checked>
+                                <span class="slider round"></span>
+                            </label>
+                            <span class="card-title">🎙️ ASR SPEECH</span>
+                        </div>
+                        <span class="chevron-icon">▲</span>
+                    </div>
+                    <div class="card-body" id="body-asr">
+                        <textarea id="speech-input" rows="2" placeholder="Lời thoại nhân vật..."></textarea>
+                        <div class="weight-row" id="row-weight-asr">
+                            <label for="weight-asr">ASR Weight: <span id="val-weight-asr">1.0</span></label>
+                            <input type="range" id="weight-asr" min="0" max="1" step="0.1" value="1.0">
+                        </div>
+                        <!-- ASR EXPANDED CONTEXT (±N SEGMENTS) -->
+                        <div class="asr-context-row" style="margin-top: 8px; display: flex; align-items: center; justify-content: space-between; font-size: 0.72rem;">
+                            <span style="color: var(--text-muted);" title="Quét mở rộng ±N cụm lời thoại liền kề để giải quyết hiện tượng trôi lệch (drift)">ASR Ngữ Cảnh:</span>
+                            <div class="pill-group" id="asr-window-pills">
+                                <button type="button" class="btn-pill" data-n="0" title="Chỉ segment hiện tại">0</button>
+                                <button type="button" class="btn-pill active" data-n="1" title="±1 segment liền kề">±1</button>
+                                <button type="button" class="btn-pill" data-n="2" title="±2 segments liền kề">±2</button>
+                                <button type="button" class="btn-pill" data-n="3" title="±3 segments liền kề">±3</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- MODULE 3: OCR TEXT SEARCH -->
+                <div class="feature-card is-collapsed" id="card-ocr" hidden>
+                    <div class="card-header" data-target="body-ocr">
+                        <div class="header-left">
+                            <label class="switch-small" title="Bật/Tắt OCR">
+                                <input type="checkbox" id="enable-ocr-check">
+                                <span class="slider round"></span>
+                            </label>
+                            <span class="card-title">🔤 OCR TEXT</span>
+                        </div>
+                        <span class="chevron-icon">▲</span>
+                    </div>
+                    <div class="card-body" id="body-ocr">
+                        <input type="text" id="ocr-input" placeholder="Ví dụ: Highlands Coffee, 51A-9999, Bến Thành...">
+                        <div class="weight-row" id="row-weight-ocr">
+                            <label for="weight-ocr">OCR Weight: <span id="val-weight-ocr">1.0</span></label>
+                            <input type="range" id="weight-ocr" min="0" max="1" step="0.1" value="1.0">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- MODULE 4: RT-DETR OBJECT DETECTION -->
+                <div class="feature-card is-collapsed" id="card-object" style="display:none">
+                    <div class="card-header" data-target="body-object">
+                        <div class="header-left">
+                            <label class="switch-small" title="Bật/Tắt Object Detection">
+                                <input type="checkbox" id="enable-object-check">
+                                <span class="slider round"></span>
+                            </label>
+                            <span class="card-title">📦 RT-DETR OBJECT</span>
+                        </div>
+                        <span class="chevron-icon">▲</span>
+                    </div>
+                    <div class="card-body" id="body-object">
+                        <label for="object-class-select" style="font-size: 0.72rem; color: var(--text-muted);">Chọn Vật
+                            Thể (COCO 80 Classes):</label>
+                        <select id="object-class-select" class="select-box">
+                            <option value="0">0: person (người)</option>
+                        </select>
+
+                        <div class="slider-group" style="margin-top: 8px;">
+                            <div class="slider-header">
+                                <label for="object-conf-slider">Ngưỡng Tin Cậy (Confidence):</label>
+                                <span id="val-object-conf" class="slider-val">0.30</span>
+                            </div>
+                            <input type="range" id="object-conf-slider" min="0.0" max="0.9" step="0.05" value="0.30">
+                        </div>
+
+                        <div class="weight-row" id="row-weight-object" style="margin-top: 8px;">
+                            <label for="weight-object">Object Weight: <span id="val-weight-object">0.5</span></label>
+                            <input type="range" id="weight-object" min="0" max="1" step="0.1" value="0.5">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- MODULE 5: SMART DEDUPLICATION -->
+                <div class="feature-card is-collapsed" id="card-dedup">
+                    <div class="card-header" data-target="body-dedup">
+                        <div class="header-left">
+                            <label class="switch-small" title="Bật/Tắt Smart Deduplication">
+                                <input type="checkbox" id="smart-dedup-check" checked>
+                                <span class="slider round"></span>
+                            </label>
+                            <span class="card-title">✨ SMART DEDUP</span>
+                        </div>
+                        <span class="chevron-icon">▲</span>
+                    </div>
+                    <div class="card-body" id="body-dedup">
+                        <div class="thresh-row">
+                            <label for="visual-sim-slider">Ngưỡng Tương Đồng Ảnh:</label>
+                            <div class="candidate-row">
+                                <input type="range" id="visual-sim-slider" min="0.50" max="0.999" step="0.005"
+                                    value="0.90">
+                                <input type="number" id="visual-sim-num" min="0.50" max="0.999" step="0.005"
+                                    value="0.90" class="num-box">
+                            </div>
+                        </div>
+
+                        <div class="radio-group-compact" style="margin-top: 8px;">
+                            <label class="radio-label"><input type="radio" name="smart-submode" value="smart" checked>
+                                Tự động (Visual + ASR)</label>
+                            <label class="radio-label"><input type="radio" name="smart-submode" value="visual_only">
+                                Chỉ lọc theo ảnh</label>
+                            <label class="radio-label"><input type="radio" name="smart-submode" value="asr_only"> Chỉ
+                                lọc theo ASR</label>
+                        </div>
+
+                        <div class="unique-video-row" style="margin-top: 8px; padding-top: 6px;">
+                            <label for="unique-video-check" style="font-size: 0.76rem; color: #f59e0b;">🌟 1 Frame Duy Nhất / Video</label>
+                            <input type="checkbox" id="unique-video-check">
+                        </div>
+
+                        <!-- CROSS-VIDEO DEDUP (LỌC TRÙNG LIÊN VIDEO CHỐNG QUẢNG CÁO / INTRO) -->
+                        <div class="cross-video-section" style="margin-top: 10px; padding-top: 8px; border-top: 1px dashed rgba(255,255,255,0.1);">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                                <label for="enable-cross-video-dedup-check" style="font-size: 0.76rem; color: #38bdf8; font-weight: 600; cursor: pointer;">
+                                    🛡️ Khử Trùng Liên Video (QC/Intro):
+                                </label>
+                                <label class="switch-small">
+                                    <input type="checkbox" id="enable-cross-video-dedup-check" checked>
+                                    <span class="slider round"></span>
+                                </label>
+                            </div>
+                            <div class="candidate-row" id="row-cross-video-sim">
+                                <input type="range" id="cross-video-sim-slider" min="0.75" max="0.99" step="0.01" value="0.90">
+                                <input type="number" id="cross-video-sim-num" min="0.75" max="0.99" step="0.01" value="0.90" class="num-box">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- MODULE 6A: DANH MỤC & BỘ LỌC VIDEO (DATABASE PUSHDOWN) -->
+                <div class="feature-card is-collapsed" id="card-category-filter">
+                    <div class="card-header" data-target="body-category-filter">
+                        <div class="header-left">
+                            <span class="card-icon">📂</span>
+                            <span class="card-title">DANH MỤC & LỌC VIDEO (DB)</span>
+                        </div>
+                        <span class="chevron-icon">▼</span>
+                    </div>
+                    <div class="card-body" id="body-category-filter">
+                        <div class="taxonomy-heading-row">
+                            <label for="category-select">Danh mục chủ đề</label>
+                            <button type="button" id="clear-category-filter" class="btn-filter-clear" title="Bỏ toàn bộ lọc danh mục">Xóa lọc</button>
+                        </div>
+                        <div class="taxonomy-shortcut-hint">Click: chọn một · Ctrl+Click: chọn nhiều · Không chọn: tất cả</div>
+                        <select id="category-select" class="select-box taxonomy-multi-select" multiple size="6" aria-label="Chọn một hoặc nhiều danh mục"></select>
+                        <div id="category-load-status" class="taxonomy-shortcut-hint" role="status" aria-live="polite">Đang tải danh mục…</div>
+                        <button type="button" id="category-load-retry" class="btn-filter-clear" hidden>Thử lại</button>
+
+                        <div id="group-subcategory" class="taxonomy-subgroup" style="display: none;">
+                            <label for="subcategory-select">Môn học của Dạy học</label>
+                            <div class="taxonomy-shortcut-hint">Ctrl+Click để chọn nhiều môn</div>
+                            <select id="subcategory-select" class="select-box taxonomy-multi-select" multiple size="5" aria-label="Chọn một hoặc nhiều môn học"></select>
+                        </div>
+
+                        <!-- Tag Filter: Chọn nhiều Video cần BAO GỒM (Include) -->
+                        <div style="margin-top: 8px; border-top: 1px dashed rgba(255,255,255,0.1); padding-top: 6px;">
+                            <label style="font-size: 0.72rem; color: #34d399; font-weight: 600;">➕ Chỉ Tìm Trong Các Video Này (Include):</label>
+                            <div class="tags-input-wrapper" style="margin-top: 4px;">
+                                <div id="include-tags-container" class="tags-container"></div>
+                                <input type="text" id="include-video-input" class="tag-input-field" placeholder="Nhập Video ID (vd: L21_V001) rồi Enter / Phẩy...">
+                            </div>
+                        </div>
+
+                        <!-- Tag Filter: Chọn nhiều Video cần LOẠI TRỪ (Exclude) -->
+                        <div style="margin-top: 8px; border-top: 1px dashed rgba(255,255,255,0.1); padding-top: 6px;">
+                            <label style="font-size: 0.72rem; color: #f87171; font-weight: 600;">➖ Loại Trừ Các Video Này (Exclude):</label>
+                            <div class="tags-input-wrapper" style="margin-top: 4px;">
+                                <div id="exclude-tags-container" class="tags-container"></div>
+                                <input type="text" id="exclude-video-input" class="tag-input-field" placeholder="Nhập Video ID cần loại bỏ rồi Enter...">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- MODULE 6: CANDIDATE POOL -->
+                <div class="feature-card is-collapsed" id="card-candidates">
+                    <div class="card-header" data-target="body-candidates">
+                        <div class="header-left">
+                            <span class="card-icon">🎯</span>
+                            <span class="card-title">CANDIDATE POOL</span>
+                        </div>
+                        <span class="chevron-icon">▼</span>
+                    </div>
+                    <div class="card-body" id="body-candidates">
+                        <div class="thresh-row">
+                            <label for="top-k-slider">1. Candidates Quét Nhanh (Top K1):</label>
+                            <div class="candidate-row">
+                                <input type="range" id="top-k-slider" min="10" max="300" step="10" value="100">
+                                <input type="number" id="top-k-num" min="10" max="300" step="10" value="100"
+                                    class="num-box" title="Số lượng kết quả lấy từ bước 1">
+                            </div>
+                        </div>
+
+                        <div class="param-grid-2col" style="margin-top: 8px;" hidden>
+                            <div class="param-item">
+                                <label for="rerank-top-v">2. Top Videos (N):</label>
+                                <input type="number" id="rerank-top-v" value="5" min="1" max="30" class="num-box"
+                                    title="Lọc ra N video có điểm cao nhất từ Top K1">
+                            </div>
+                            <div class="param-item">
+                                <label for="rerank-k-per-video">3. Frames/Video (M):</label>
+                                <input type="number" id="rerank-k-per-video" value="40" min="5" max="100"
+                                    class="num-box" title="Số keyframe trích xuất từ mỗi video trong Top N">
+                            </div>
+                        </div>
+
+                        <!-- Bộ Lọc Thô Nhanh Trên UI (Client-Side Quick Filter) -->
+                        <div style="margin-top: 10px; border-top: 1px dashed rgba(255,255,255,0.1); padding-top: 6px;">
+                            <label for="filter-video-results" style="font-size: 0.72rem; color: #38bdf8; font-weight: 600;">⚡ Lọc Nhanh Video Từ Top K Kết Quả (Client-side):</label>
+                            <input type="text" id="filter-video-results" placeholder="Gõ L21_V001 hoặc L21 để lọc ngay kết quả...">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- MODULE 7: TRAKE TARS MONOTONIC DP PARAMETERS (CHỈ HIỆN KHI Ở TRAKE MODE) -->
+                <div class="feature-card" id="card-trake-params" style="display: none; border-color: #a855f7; background: #0f0b1e;">
+                    <div class="card-header" data-target="body-trake-params" style="background: linear-gradient(90deg, #2e1065 0%, #1e1b4b 100%);">
+                        <div class="header-left">
+                            <span class="card-icon">⏱️</span>
+                            <span class="card-title" style="color: #c084fc;">THAM SỐ TARS DP (TRAKE)</span>
+                        </div>
+                        <span class="chevron-icon">▲</span>
+                    </div>
+                    <div class="card-body" id="body-trake-params">
+                        <div class="thresh-row">
+                            <label for="trake-candidate-pool">1. Candidate Pool (Top K1 mỗi sự kiện):</label>
+                            <div class="candidate-row">
+                                <input type="range" id="trake-candidate-pool-slider" min="20" max="1000" step="20" value="100">
+                                <input type="number" id="trake-candidate-pool" min="20" max="2500" step="10" value="100" class="num-box" title="Số lượng frame quét thô ban đầu ở Stage 1">
+                            </div>
+                        </div>
+                        <div class="param-grid-2col" style="margin-top: 8px;">
+                            <div class="param-item">
+                                <label for="trake-top-v-input" title="Số lượng Top Video tiềm năng đưa vào giải thuật DP">2. Top Videos (V):</label>
+                                <input type="number" id="trake-top-v-input" value="10" min="1" max="50" class="num-box" title="Top Videos Pool">
+                            </div>
+                            <div class="param-item">
+                                <label for="trake-frames-per-vid" title="Số frame tối đa quét từ mỗi video trong Top V">3. Frames/Video (M):</label>
+                                <input type="number" id="trake-frames-per-vid" value="40" min="5" max="150" class="num-box" title="Frames extracted per video">
+                            </div>
+                        </div>
+                        <div class="param-grid-2col" style="margin-top: 8px;">
+                            <div class="param-item">
+                                <label for="trake-lambda-input" title="Hệ số phạt khoảng cách thời gian giữa 2 sự kiện (mặc định 0.001)">4. Lambda (λ):</label>
+                                <input type="number" id="trake-lambda-input" value="0.001" step="0.0005" min="0" max="0.05" class="num-box" title="Lambda Penalty">
+                            </div>
+                            <div class="param-item">
+                                <label for="trake-kpaths-input" title="Số lượng đường chuỗi đa dạng trích xuất từ mỗi video">5. K-Paths:</label>
+                                <input type="number" id="trake-kpaths-input" value="3" min="1" max="10" class="num-box" title="Diverse K-paths">
+                            </div>
+                        </div>
+                        <div class="thresh-row" style="margin-top: 8px; display: flex; align-items: center; justify-content: space-between;">
+                            <label for="trake-top-k-input" style="font-size: 0.74rem; color: #cbd5e1;" title="Số chuỗi ứng viên xuất ra màn hình">6. Top Sequences:</label>
+                            <input type="number" id="trake-top-k-input" value="10" min="1" max="50" class="num-box" style="width: 70px;" title="Top K Sequences">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- MODULE 8: SUBMISSION MANAGER & ZIP PACKAGER (AIC 2026) -->
+                <div class="feature-card is-collapsed" id="card-submission" style="border-color: #0284c7; background: #081528;">
+                    <div class="card-header" data-target="body-submission" style="background: linear-gradient(90deg, #0c2d48 0%, #102a43 100%);">
+                        <div class="header-left">
+                            <span class="card-icon">📤</span>
+                            <span class="card-title" style="color: #38bdf8; font-weight: 700;">SUBMISSION MANAGER</span>
+                        </div>
+                        <span class="chevron-icon">▲</span>
+                    </div>
+                    <div class="card-body" id="body-submission">
+                        <!-- Đường dẫn Thư mục Submission -->
+                        <div style="margin-bottom: 8px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                                <label for="sub-dir-path" style="font-size: 0.72rem; color: var(--text-muted);">📁 Thư mục Submission:</label>
+                                <button type="button" id="btn-sub-refresh-dir" class="btn-text-action" title="Quét lại các file CSV">🔄 Quét</button>
+                            </div>
+                            <input type="text" id="sub-dir-path" value="query/query-p1/submission" placeholder="query/query-p1/submission" class="input-mono">
+                        </div>
+
+                        <!-- Danh sách file CSV đã có trong thư mục -->
+                        <div id="sub-file-list-container" class="sub-file-list" style="display: none;">
+                            <div class="sub-file-list-header">Các file trong thư mục (<span id="sub-file-count">0</span>):</div>
+                            <div id="sub-file-items" class="sub-file-items-scroll"></div>
+                        </div>
+
+                        <!-- Chuyển đổi Loại Truy Vấn -->
+                        <div style="margin: 10px 0 6px 0;">
+                            <label style="font-size: 0.72rem; color: var(--text-muted); display: block; margin-bottom: 4px;">🎯 Chọn Loại Đáp Án:</label>
+                            <div class="pill-group" id="sub-mode-pills">
+                                <button type="button" class="btn-pill active" data-mode="kis">🎯 KIS (100d)</button>
+                                <button type="button" class="btn-pill" data-mode="qa">❓ QA (100d)</button>
+                                <button type="button" class="btn-pill" data-mode="trake">⏱️ TRAKE (1d)</button>
+                            </div>
+                        </div>
+
+                        <!-- Form nhập liệu chung: Video ID -->
+                        <div style="margin-bottom: 8px;">
+                            <label for="sub-video-id" style="font-size: 0.72rem; color: var(--text-muted);">Video ID:</label>
+                            <input type="text" id="sub-video-id" placeholder="L21_V015..." class="input-mono">
+                        </div>
+
+                        <!-- Form KIS / QA: Frame Range [A - B] -->
+                        <div id="sub-kis-qa-fields">
+                            <div class="param-grid-2col" style="margin-bottom: 6px;">
+                                <div class="param-item">
+                                    <label for="sub-frame-a">Frame A (Đầu):</label>
+                                    <input type="number" id="sub-frame-a" placeholder="25635" class="num-box">
+                                </div>
+                                <div class="param-item">
+                                    <label for="sub-frame-b">Frame B (Cuối):</label>
+                                    <input type="number" id="sub-frame-b" placeholder="26598" class="num-box">
+                                </div>
+                            </div>
+                            <!-- Interval phụ (optional) -->
+                            <div class="param-grid-2col" style="margin-bottom: 8px;">
+                                <div class="param-item">
+                                    <label for="sub-frame-a2" style="font-size: 0.68rem; color: #94a3b8;">Interval phụ A2:</label>
+                                    <input type="number" id="sub-frame-a2" placeholder="optional" class="num-box">
+                                </div>
+                                <div class="param-item">
+                                    <label for="sub-frame-b2" style="font-size: 0.68rem; color: #94a3b8;">Interval phụ B2:</label>
+                                    <input type="number" id="sub-frame-b2" placeholder="optional" class="num-box">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Form QA only: Câu trả lời -->
+                        <div id="sub-qa-fields" style="display: none; margin-bottom: 8px;">
+                            <label for="sub-qa-answer" style="font-size: 0.72rem; color: #f59e0b; font-weight: 700;">💬 Câu trả lời Q&A (tối đa 100 ký tự):</label>
+                            <input type="text" id="sub-qa-answer" placeholder='Ví dụ: "Nhân bánh cuốn (bánh cuốn)"'>
+                        </div>
+
+                        <!-- Form TRAKE only: Danh sách Frame IDs của N events -->
+                        <div id="sub-trake-fields" style="display: none; margin-bottom: 8px;">
+                            <label for="sub-trake-frames" style="font-size: 0.72rem; color: #c084fc; font-weight: 700;">⏱️ Chuỗi Frame IDs (E1, E2, E3, E4...):</label>
+                            <input type="text" id="sub-trake-frames" placeholder="15930, 15990, 16320, 16890..." class="input-mono">
+                        </div>
+
+                        <!-- Tùy chọn Risk Hedging: Kèm Top Video hệ thống -->
+                        <div style="margin-bottom: 8px;" id="sub-hedging-row">
+                            <label class="switch-small-label" style="display: flex; align-items: center; gap: 6px; font-size: 0.72rem; color: #38bdf8; cursor: pointer;">
+                                <input type="checkbox" id="sub-enable-hedging" checked>
+                                <span>🛡️ Top 16-100: Bồi Video xếp hạng Search (Risk Hedging)</span>
+                            </label>
+                        </div>
+
+                        <!-- Tên file CSV đầu ra -->
+                        <div style="margin-bottom: 10px;">
+                            <label for="sub-file-name" style="font-size: 0.72rem; color: var(--text-muted);">📄 Tên file CSV nộp bài:</label>
+                            <input type="text" id="sub-file-name" placeholder="query-p1-1-kis.csv" class="input-mono">
+                        </div>
+
+                        <!-- Nút Fill & Lưu -->
+                        <div class="action-buttons-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 10px;">
+                            <button type="button" id="btn-sub-fill-preview" class="btn-card-action" style="background: #0284c7; color: white; padding: 7px;">🎯 FILL & XEM</button>
+                            <button type="button" id="btn-sub-save-file" class="btn-card-action" style="background: #10b981; color: white; padding: 7px;">💾 LƯU FILE CSV</button>
+                        </div>
+
+                        <!-- Preview Box 5 dòng đầu -->
+                        <div id="sub-preview-container" style="display: none; margin-bottom: 12px;">
+                            <div style="display: flex; justify-content: space-between; font-size: 0.70rem; color: #94a3b8; margin-bottom: 3px;">
+                                <span>Xem trước (Top 5 / <span id="sub-preview-total">100</span> dòng):</span>
+                                <span id="sub-preview-status" style="color: #38bdf8;">Đã sẵn sàng</span>
+                            </div>
+                            <pre id="sub-preview-code" class="sub-preview-pre"></pre>
+                        </div>
+
+                        <!-- PHẦN ĐÓNG GÓI ZIP CHUẨN BTC -->
+                        <div class="sub-zip-section" style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px;">
+                            <div style="font-size: 0.74rem; font-weight: 700; color: #f59e0b; margin-bottom: 6px;">📦 ĐÓNG GÓI NỘP BÀI (SUBMISSION.ZIP)</div>
+                            <div style="margin-bottom: 8px;">
+                                <label for="sub-zip-output-path" style="font-size: 0.70rem; color: var(--text-muted);">Đường dẫn File ZIP xuất ra:</label>
+                                <input type="text" id="sub-zip-output-path" value="query/submission_p1.zip" placeholder="query/submission_p1.zip" class="input-mono">
+                            </div>
+                            <button type="button" id="btn-sub-export-zip" class="btn-search-dock" style="background: linear-gradient(135deg, #d97706 0%, #b45309 100%); font-size: 0.8rem; padding: 9px;">📦 XUẤT SUBMISSION.ZIP (CHUẨN BTC)</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- STICKY ACTION DOCK AT BOTTOM OF SIDEBAR -->
+            <div class="sidebar-sticky-dock" id="sidebar-sticky-dock">
+                <!-- KIS / QA Action Buttons Row -->
+                <div class="action-buttons-row" id="kis-action-dock">
+                    <button id="search-btn" class="btn-search-dock"
+                        title="Truy vấn đơn cảnh thông thường theo nội dung đang nhập">🚀 SEARCH NOW</button>
+                    <button id="multi-search-btn" class="btn-multi-dock" disabled
+                        title="Quét song song tất cả các phân cảnh & Giao thoa video (Kích hoạt khi phát hiện >1 cảnh)">🎬
+                        MULTI-SCENE</button>
+                    <button id="rerank-btn" class="btn-rerank-dock" hidden title="Lọc Top N Video và tái xếp hạng chi tiết">🎯
+                        RERANK</button>
+                </div>
+                <!-- TRAKE Action Buttons Row -->
+                <div class="action-buttons-row trake-action-grid" id="trake-action-dock" style="display: none;">
+                    <button id="trake-single-search-btn" class="btn-search-dock"
+                        title="Tìm kiếm đơn cảnh cho riêng phân cảnh/sự kiện đang chọn">🚀 TÌM 1 CẢNH</button>
+                    <button id="trake-search-btn" class="btn-trake-dock"
+                        title="Quét chuỗi sự kiện tuần tự qua thuật toán TARS Monotonic DP">⏱️ SEARCH TRAKE</button>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content: Pure Verification Workspace -->
+        <main class="main-content">
+            <!-- DRES LIVE COMPACT BAR (VÒNG CHUNG KẾT AIC 2026) -->
+            <div id="dres-live-bar" class="dres-live-bar">
+                <div class="dres-bar-left">
+                    <div class="dres-status-indicator" id="dres-status-indicator" title="Trạng thái kết nối máy chủ DRES của BTC">
+                        <span class="dres-dot pulse-gray" id="dres-dot"></span>
+                        <span class="dres-status-label" id="dres-status-label">DRES: Đang kết nối...</span>
+                    </div>
+                    <div class="dres-eval-badge" id="dres-eval-badge" title="Đợt thi hiện tại trên máy chủ DRES">
+                        <span class="eval-icon">🎯</span>
+                        <span id="dres-eval-name">Chưa có Evaluation</span>
+                    </div>
+                    <button type="button" id="dres-refresh-eval-btn" class="btn-dres-icon" title="Làm mới đợt thi">🔄</button>
+                </div>
+
+                <div class="dres-bar-center">
+                    <div class="dres-sub-mode-group">
+                        <span style="font-size: 0.76rem; color: #94a3b8; font-weight: 700;">Chế độ nộp:</span>
+                        <div class="pill-group" id="dres-mode-pills">
+                            <button type="button" class="btn-pill active" data-mode="kis" title="Nộp KIS: Giữ phím Ctrl + Click vào ảnh để nộp ngay">🔍 KIS (Ctrl+Click)</button>
+                            <button type="button" class="btn-pill" data-mode="qa" title="Nộp Q&A: Giữ phím Ctrl + Click vào ảnh để nhập đáp án">❓ QA (Ctrl+Click)</button>
+                            <button type="button" class="btn-pill" data-mode="trake" title="Nộp TRAKE: Giữ phím Ctrl + Click mở Timeline & chọn chuỗi sự kiện">⏱️ TRAKE (Timeline)</button>
+                        </div>
+                        <select id="dres-task-mode-select" class="dres-mode-select" style="display: none;">
+                            <option value="kis" selected>KIS</option>
+                            <option value="qa">QA</option>
+                            <option value="trake">TRAKE</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="dres-bar-right">
+                    <div class="dres-shortcut-badge" title="Hướng dẫn thao tác nộp bài siêu tốc">
+                        <span style="color: #10b981; font-weight: 700;">⚡ Phím tắt:</span>
+                        <span id="dres-shortcut-desc" style="color: #cbd5e1; font-size: 0.74rem;">Ctrl + Click vào ảnh để Nộp</span>
+                    </div>
+                    <button type="button" id="dres-history-toggle-btn" class="btn-dres-tool" title="Xem lịch sử các lần nộp bài câu hiện tại">
+                        📜 Lịch sử (<span id="dres-sub-count">0</span>)
+                    </button>
+                    <button type="button" id="quick-video-open-btn" class="btn-dres-tool" title="Mở video/KF bất kỳ hoặc nộp hộ đồng đội (Alt+G)">
+                        🔎 Mở / Nộp hộ
+                    </button>
+                    <button type="button" id="dres-settings-btn" class="btn-dres-tool" title="Cấu hình tài khoản DRES">
+                        ⚙️ Cấu hình
+                    </button>
+                </div>
+            </div>
+
+            <!-- QA Reminder Callout Box -->
+            <div id="qa-callout" class="qa-banner" style="display: none;">
+                <div class="qa-badge">❓ CÂU HỎI Q&A CẦN TRẢ LỜI:</div>
+                <div id="qa-question-text" class="qa-text">...</div>
+            </div>
+
+            <!-- Clean Top Bar -->
+            <div class="results-header-pro" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+                <div class="results-header-left">
+                    <h2 id="results-main-title">MULTIMODAL RESULTS</h2>
+                    <span id="result-count" class="result-count-badge">0 items found</span>
+                    <span id="status-text" class="status-pill"></span>
+                </div>
+            </div>
+
+            <!-- QWEN RERANK TOOLBAR CHO TRAKE STORYBOARD -->
+            <div id="trake-qwen-toolbar" class="trake-qwen-toolbar" hidden style="display: none;">
+                <div class="qwen-toolbar-left" style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                    <button id="trake-qwen-rerank-btn" class="btn-qwen-rerank" title="Kích hoạt Qwen-VL Reranker đánh giá lại thứ hạng chuỗi Storyboard">
+                        🤖 QWEN RERANK CHAINS
+                    </button>
+                    <div class="qwen-topk-select-group" style="display: flex; align-items: center; gap: 6px; font-size: 0.76rem; color: #cbd5e1;">
+                        <span>Top K Chains:</span>
+                        <div class="pill-group" id="qwen-topk-pills">
+                            <button type="button" class="btn-pill" data-k="3">3</button>
+                            <button type="button" class="btn-pill active" data-k="5">5</button>
+                            <button type="button" class="btn-pill" data-k="10">10</button>
+                            <button type="button" class="btn-pill" data-k="20">All</button>
+                        </div>
+                        <input type="number" id="qwen-topk-chains-input" min="1" max="50" value="5" class="num-box" style="width: 55px;" title="Số chuỗi tối đa đưa vào Qwen-VL">
+                    </div>
+                </div>
+                <div class="qwen-toolbar-status" id="qwen-rerank-status" style="display: flex; align-items: center; gap: 8px;">
+                    <span id="qwen-status-badge" class="qwen-status-badge">⚡ Qwen-VL GPU</span>
+                    <span id="qwen-progress-text" style="font-size: 0.76rem; color: #94a3b8;">Chưa chạy AI Rerank</span>
+                </div>
+            </div>
+
+            <!-- Grid of Keyframe Cards (KIS / QA / Standard Multi-Scene) -->
+            <div id="results-grid" class="results-grid">
+                <!-- Keyframe items injected by JS -->
+            </div>
+        </main>
+    </div>
+
+    <!-- LIGHTBOX MODAL (ZOOM IMAGE VIEWER) -->
+    <div id="lightbox-modal" class="lightbox-overlay" style="display: none;">
+        <div class="lightbox-container">
+            <button id="lightbox-close-btn" class="lightbox-close-btn">&times;</button>
+
+            <div class="lightbox-body">
+                <!-- Left: Big Image / Video + Canvas for Bounding Box -->
+                <div class="lightbox-media-wrapper">
+                    <div class="media-container" id="lightbox-media-container">
+                        <!-- Keyframe Static Image + Canvas -->
+                        <div id="lightbox-zoom-box" class="media-zoom-box">
+                            <img id="lightbox-img" src="" alt="Full Keyframe">
+                            <canvas id="lightbox-canvas"></canvas>
+                        </div>
+                    </div>
+                    <div class="lightbox-canvas-controls" id="lightbox-canvas-controls" style="margin-top: 8px;">
+                        <label
+                            style="display: none;">
+                            <input type="checkbox" id="lightbox-toggle-boxes" checked style="accent-color: #6366f1;">
+                            <span>🔲 Bounding Boxes (RT-DETR)</span>
+                        </label>
+                        <span id="lightbox-zoom-badge" class="zoom-badge">🔍 100% (Lăn chuột để Zoom / Kéo để Pan)</span>
+                        <button id="lightbox-zoom-reset-btn" class="btn-zoom-reset">↺ Reset</button>
+                    </div>
+                </div>
+
+                <!-- Right: Information & Action Sidebar -->
+                <div class="lightbox-sidebar">
+                    <h3 id="lightbox-title" style="font-family: var(--font-mono); font-size: 1.05rem; color: #38bdf8;">
+                        L21_V001 / 000100</h3>
+
+                    <div class="lightbox-badge-row">
+                        <span id="lightbox-score-badge" class="score-badge">Score: 0.950</span>
+                        <span id="lightbox-time-badge" class="time-badge">⏱️ 00:04s</span>
+                    </div>
+                    <div id="lightbox-ranks-strip" style="display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px;"></div>
+
+                    <div class="lightbox-actions-row">
+                        <button id="lightbox-dres-submit-btn" class="btn-card-action btn-dres-lightbox" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 12px 14px; font-weight: 800; font-size: 0.95rem; border-radius: 8px; box-shadow: 0 4px 12px rgba(16,185,129,0.35); border: none; cursor: pointer; transition: all 0.2s ease;">🚀 NỘP DRES NGAY LẬP TỨC</button>
+                        <button id="lightbox-video-btn" class="video-play-btn">▶️ MỞ VIDEO TẠI MỐC NÀY</button>
+                        <button id="lightbox-copy-btn" class="copy-id-btn">📋 COPY VIDEO & FRAME ID</button>
+                        <button id="lightbox-sub-btn" class="btn-card-action" style="background: #0284c7; color: white; padding: 10px 14px; font-weight: 700;">📥 NẠP VÀO SUBMISSION</button>
+                        <button id="lightbox-timeline-btn" class="timeline-action-btn">🎞️ XEM TOÀN BỘ TIMELINE VIDEO</button>
+                    </div>
+                    <div id="copy-status" style="font-size: 0.75rem; color: #10b981; min-height: 16px;"></div>
+
+                    <div class="lightbox-section">
+                        <div style="font-size: 0.76rem; font-weight: 700; color: #a5b4fc; margin-bottom: 4px;">🎙️ LỜI
+                            THOẠI ASR:</div>
+                        <div id="lightbox-transcript" class="transcript-content">Không có lời thoại</div>
+                    </div>
+
+                    <div class="lightbox-section" style="display:none">
+                        <div style="font-size: 0.76rem; font-weight: 700; color: #a5b4fc; margin-bottom: 4px;">📦 VẬT
+                            THỂ NHẬN DIỆN (RT-DETR):</div>
+                        <div id="lightbox-boxes-list" class="boxes-list-content"
+                            style="font-family: var(--font-mono); font-size: 0.78rem; color: #cbd5e1;">
+                            <!-- Injected by JS -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TIMELINE MODAL (STRIP VIEW) -->
+    <div id="timeline-modal" class="timeline-overlay" style="display: none;">
+        <div class="timeline-container">
+            <div class="timeline-header">
+                <div class="timeline-title-box">
+                    <h2 id="timeline-video-title">🎞️ TIMELINE: VIDEO_ID</h2>
+                    <span id="timeline-frame-count" class="timeline-badge">0 frames</span>
+                </div>
+                <button id="timeline-close-btn" class="timeline-close-btn">&times;</button>
+            </div>
+            <div
+                style="padding: 8px 16px; font-size: 0.78rem; color: #94a3b8; background: #0f172a; border-bottom: 1px solid var(--border-subtle); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+                <span>💡 <strong>TIMELINE:</strong> Cuộn dọc để lướt toàn bộ keyframes từ 00:00 đến hết video. Bấm vào Keyframe để soi chi tiết.</span>
+                <span style="color: #c084fc; font-weight: 700; font-size: 0.75rem;">⚡ TRAKE: Giữ Ctrl + Click vào các ảnh để chọn chuỗi E1, E2, E3...</span>
+            </div>
+            <!-- THANH ĐIỀU KHIỂN CHỌN SỰ KIỆN TRAKE -->
+            <div id="trake-timeline-bar" class="trake-timeline-bar" style="display: none;">
+                <div class="trake-bar-left">
+                    <span class="trake-tag">⏱️ CHUỖI SỰ KIỆN TRAKE:</span>
+                    <span id="trake-selected-chain-text" class="trake-chain-text">Chưa chọn frame nào (Ctrl+Click để chọn)</span>
+                    <div id="trake-event-pills" class="trake-event-pills" aria-label="Các sự kiện TRAKE đã chọn"></div>
+                </div>
+                <div class="trake-bar-right">
+                    <button type="button" id="btn-trake-submit-dres" class="btn-trake-submit" disabled title="Nộp chuỗi sự kiện này lên DRES">
+                        🚀 NỘP CHUỖI TRAKE
+                    </button>
+                    <button type="button" id="btn-trake-sort-time" class="btn-trake-sort" title="Tự động sắp xếp lại các frame đã chọn theo thứ tự thời gian tăng dần">
+                        ⏱️ Xếp theo thời gian
+                    </button>
+                    <button type="button" id="btn-trake-clear-selection" class="btn-trake-clear" title="Xóa toàn bộ các frame đã chọn">
+                        ↺ Xóa chọn
+                    </button>
+                </div>
+            </div>
+            <div id="timeline-strip" class="timeline-strip">
+                <!-- Timeline Thumbnails Injected by JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- VIDEO PLAYER MODAL -->
+    <div id="video-modal" class="video-overlay" style="display: none;">
+        <div class="video-container">
+            <div class="video-header">
+                <div class="video-title-box">
+                    <h2 id="video-player-title">▶️ VIDEO: L23_V007.mp4</h2>
+                    <span id="video-time-badge" class="video-badge">⏱️ 02:13 (133.96s)</span>
+                </div>
+                <button id="video-close-btn" class="video-close-btn">&times;</button>
+            </div>
+            <div class="video-body">
+                <video id="html5-video-player" controls preload="metadata" playsinline></video>
+            </div>
+            <div class="video-mode-guide">
+                Ctrl+Click vào video để thao tác DRES · Chế độ:
+                <span id="video-mode-hint">KIS — Nộp ngay</span>
+            </div>
+            <div class="video-controls-bar">
+                <button id="video-start-btn" class="video-ctrl-btn">⏮️ Đầu (00:00)</button>
+                <button id="video-rewind-5s" class="video-ctrl-btn">⏪ Lùi 5s</button>
+                <button id="video-jump-keyframe" class="video-ctrl-btn"
+                    style="background: #312e81; color: #c7d2fe; border-color: #6366f1;">🎯 Đến Keyframe</button>
+                <button id="video-forward-5s" class="video-ctrl-btn">⏩ Tiến 5s</button>
+                <div class="speed-select-group">
+                    <label>Tốc độ:</label>
+                    <select id="video-speed-select" class="speed-select">
+                        <option value="0.25">0.25x</option>
+                        <option value="0.5">0.5x</option>
+                        <option value="1" selected>1.0x</option>
+                        <option value="1.5">1.5x</option>
+                        <option value="2">2.0x</option>
+                    </select>
+                </div>
+                <button id="video-copy-btn" class="video-ctrl-btn"
+                    style="background: #065f46; color: #a7f3d0; border-color: #10b981; margin-left: auto;">📋 Chép Video/Frame</button>
+                <button id="video-trake-submit-btn" class="video-ctrl-btn video-trake-submit-btn"
+                    title="Nộp chuỗi TRAKE lên DRES sau khi đã xác thực các sự kiện">
+                    🚀 NỘP CHUỖI TRAKE
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- FLOATING TOAST NOTIFICATION CONTAINER -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <!-- DRES SETTINGS MODAL -->
+    <div id="dres-settings-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3>⚙️ CẤU HÌNH KẾT NỐI DRES (VÒNG CHUNG KẾT)</h3>
+                <button type="button" id="dres-settings-close" class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group" style="margin-bottom: 12px;">
+                    <label style="font-size: 0.75rem; color: #94a3b8; display: block; margin-bottom: 4px;">Máy chủ DRES (Server URL):</label>
+                    <input type="text" id="dres-input-server" value="https://eventretrieval.one" class="input-mono" style="width: 100%; padding: 8px; background: #0f172a; border: 1px solid #334155; color: #38bdf8; border-radius: 6px;">
+                </div>
+                <div class="form-group" style="margin-bottom: 12px;">
+                    <label style="font-size: 0.75rem; color: #94a3b8; display: block; margin-bottom: 4px;">Tên đăng nhập (Username):</label>
+                    <input type="text" id="dres-input-user" placeholder="Nhập username đội thi..." class="input-mono" style="width: 100%; padding: 8px; background: #0f172a; border: 1px solid #334155; color: #f8fafc; border-radius: 6px;">
+                </div>
+                <div class="form-group" style="margin-bottom: 12px;">
+                    <label style="font-size: 0.75rem; color: #94a3b8; display: block; margin-bottom: 4px;">Mật khẩu (Password):</label>
+                    <input type="password" id="dres-input-pass" placeholder="Để trống để dùng DRES_PASSWORD trong .env" autocomplete="current-password" class="input-mono" style="width: 100%; padding: 8px; background: #0f172a; border: 1px solid #334155; color: #f8fafc; border-radius: 6px;">
+                </div>
+                <div class="form-group" style="margin-bottom: 12px;">
+                    <label style="font-size: 0.75rem; color: #94a3b8; display: block; margin-bottom: 4px;">Run ID (Evaluation ID):</label>
+                    <div style="display:flex; gap:6px;">
+                        <input type="text" id="dres-input-eval-id" placeholder="Dán Run ID từ DRES..." class="input-mono" style="min-width:0; flex:1; padding: 8px; background: #0f172a; border: 1px solid #334155; color: #34d399; border-radius: 6px;">
+                        <button type="button" id="dres-copy-run-id" class="btn-dres-tool" title="Copy Run ID">📋</button>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer" style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 15px;">
+                <button type="button" id="dres-btn-save-login" class="btn-primary" style="background: #0284c7; color: white; padding: 10px 18px; border-radius: 6px; font-weight: 700; border: none; cursor: pointer;">💾 LƯU & ĐĂNG NHẬP NGAY</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- DRES HISTORY MODAL -->
+    <div id="dres-history-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-box modal-box-lg">
+            <div class="modal-header">
+                <h3>📜 LỊCH SỬ NỘP BÀI DRES (CÂU HIỆN TẠI)</h3>
+                <button type="button" id="dres-history-close" class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="dres-history-list" class="dres-history-list" style="max-height: 400px; overflow-y: auto;">
+                    <!-- Injected by JS -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- QUICK QA ANSWER POPUP -->
+    <div id="dres-qa-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3>❓ NỘP ĐÁP ÁN Q&A LÊN DRES</h3>
+                <button type="button" id="dres-qa-close" class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 12px; background: rgba(15, 23, 42, 0.8); padding: 8px 12px; border-radius: 6px; border: 1px solid #334155;">
+                    Mục tiêu: <span id="qa-modal-target" style="color: #38bdf8; font-weight: 700; font-family: monospace;">L21_V001 / F:15200 (50666ms)</span>
+                </div>
+                <div class="form-group" style="margin-bottom: 10px;">
+                    <label style="font-size: 0.76rem; color: #cbd5e1; display: block; margin-bottom: 6px; font-weight: 600;">Nhập câu trả lời ngắn (Answer text):</label>
+                    <input type="text" id="dres-qa-answer-input" placeholder="Ví dụ: áo đỏ, xe máy màu xanh..." class="input-mono" style="width: 100%; padding: 10px; background: #0f172a; border: 1px solid #38bdf8; color: #f8fafc; border-radius: 6px; font-size: 0.95rem;">
+                </div>
+                <div style="font-size: 0.74rem; color: #f59e0b; margin-top: 6px; font-family: monospace;">
+                    Định dạng nộp: <span id="dres-qa-preview-text" style="color: #38bdf8;">QA-answer-video-time</span>
+                </div>
+            </div>
+            <div class="modal-footer" style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 15px;">
+                <button type="button" id="dres-qa-submit-btn" class="btn-primary" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 10px 18px; border-radius: 6px; font-weight: 700; border: none; cursor: pointer;">🚀 NỘP Q&A NGAY</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- QUICK VIDEO / TEAMMATE SUBMISSION (Alt+G) -->
+    <div id="quick-video-overlay" class="quick-video-overlay" style="display: none;">
+        <section class="quick-video-dialog" role="dialog" aria-modal="true" aria-labelledby="quick-video-title">
+            <header class="quick-video-header">
+                <span id="quick-video-title">VIDEO / KEYFRAME TRỰC TIẾP</span>
+                <kbd>Alt+G</kbd>
+                <button type="button" id="quick-video-close" class="quick-video-close" aria-label="Đóng">×</button>
+            </header>
+            <div class="quick-video-tabs" role="tablist">
+                <button type="button" class="quick-video-tab active" data-quick-tab="verify">🔎 Kiểm tra</button>
+                <button type="button" class="quick-video-tab" data-quick-tab="submit">🚀 Nộp hộ</button>
+            </div>
+            <div class="quick-video-form">
+                <input type="text" id="quick-video-id-input" placeholder="Video ID: L26_V001"
+                    aria-label="Video ID" autocomplete="off" spellcheck="false">
+                <input type="text" id="quick-video-time-input" placeholder="KF ID: 003600 · thời gian: T:150 hoặc 02:30"
+                    aria-label="Keyframe ID hoặc timestamp" autocomplete="off" spellcheck="false">
+                <div id="quick-video-map-status" class="quick-video-map-status">Nhập Video ID; KF ID có thể để trống.</div>
+
+                <div id="quick-video-verify-panel" class="quick-video-panel active">
+                  <div class="quick-video-actions">
+                    <button type="button" id="btn-quick-video-go" class="quick-video-go">▶ Mở Video</button>
+                    <button type="button" id="btn-quick-video-timeline" class="quick-video-timeline">▤ Timeline</button>
+                  </div>
+                </div>
+
+                <div id="quick-video-submit-panel" class="quick-video-panel">
+                    <label class="quick-video-label" for="quick-submit-mode">Thể thức nộp hộ</label>
+                    <select id="quick-submit-mode" class="quick-video-select">
+                        <option value="kis">KIS — 1 keyframe</option>
+                        <option value="qa">Q&amp;A — mở form nhập đáp án</option>
+                        <option value="trake">TRAKE — danh sách KF cách nhau bằng dấu phẩy</option>
+                    </select>
+                    <button type="button" id="btn-quick-video-submit" class="quick-video-submit">🚀 Đối chiếu map &amp; nộp</button>
+                </div>
+                <p>Phím Enter: thao tác chính · Esc: đóng · KF không tồn tại sẽ được đối chiếu với KF gần nhất.</p>
+            </div>
+        </section>
+    </div>
+
+    <script src="app.js?v=20260926_rrf_transparency_v4"></script>
+</body>
+
+</html>

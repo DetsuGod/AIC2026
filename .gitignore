@@ -1,0 +1,85 @@
+# ==============================================================================
+# BẢO MẬT: KHÓA BÍ MẬT & MÔI TRƯỜNG CÁ NHÂN (Tuyệt đối không đưa lên GitHub)
+# ==============================================================================
+.env
+.env.local
+*.key
+*.pem
+*dres_config*.json
+*dres_session*.json
+
+# ==============================================================================
+# DỮ LIỆU NẶNG (Data, Keyframes, Videos, Vector Indices, LanceDB)
+# ==============================================================================
+/Data/
+/data/
+*.npy
+*.npz
+*.bin
+*.tar
+*.zip
+*.mp4
+*.mov
+*.mkv
+*.webm
+*.avi
+*.jpg
+*.jpeg
+*.png
+*.webp
+*.lance
+
+# ==============================================================================
+# SCRIPT BUILDER, BACKUP & TESTS DƯ THỪA (Chỉ giữ mã nguồn phục vụ Runtime)
+# ==============================================================================
+code/local_retrieval/tests/
+code/local_retrieval/create_backup_*.py
+code/local_retrieval/build_*.py
+code/local_retrieval/create_lancedb_index.py
+
+# ==============================================================================
+# HẠ TẦNG SLURM, PAPERS & DỮ LIỆU THI ĐẤU CŨ
+# ==============================================================================
+code/slurm/
+papers/
+others/
+backups/
+query/query-p1/
+query/vòng 1/
+query/vòng 2/
+query/vòng 3/
+query/theo-chu-de/
+query/submission/
+query/process_kis.py
+query/submission-note.md
+*.rar
+
+# ==============================================================================
+# MÔI TRƯỜNG ẢO VENV & PYTHON CACHE
+# ==============================================================================
+venv/
+.venv/
+env/
+code/local_retrieval/venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# ==============================================================================
+# LOG FILES & TEMPORARY ARTIFACTS
+# ==============================================================================
+*.log
+logs/
+.tempmediaStorage/
+.system_generated/
+scratch/
+metadata_mappings_copy/
+
+# ==============================================================================
+# OS SPECIFIC FILES & TEMPORARY CLONES
+# ==============================================================================
+aic2026_source/
+.DS_Store
+Thumbs.db
+desktop.ini

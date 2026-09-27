@@ -1,0 +1,30 @@
+# ==============================================================================
+# AIC 2026 - DEPENDENCIES FOR LOCAL RETRIEVAL & WEB SYSTEM
+# ==============================================================================
+
+# Core Deep Learning & Vision-Language Models
+torch>=2.0.0
+torchvision>=0.15.0
+transformers>=4.38.0
+sentence-transformers>=2.3.0
+qwen-vl-utils>=0.0.8
+timm>=0.9.0
+
+# Vector Database & Fast Search Indices
+lancedb>=0.17.0
+pyarrow>=14.0.0
+usearch>=2.10.0
+
+# Web Backend API Server
+fastapi>=0.109.0
+uvicorn>=0.27.0
+python-multipart>=0.0.6
+
+# Image & Video Processing
+Pillow>=10.0.0
+av>=10.0.0
+numpy>=1.24.0
+scipy>=1.11.0
+
+# AI Query Assistant (Google Gemini)
+google-generativeai>=0.8.0
